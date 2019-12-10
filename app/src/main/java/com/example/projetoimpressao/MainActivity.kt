@@ -41,47 +41,48 @@ class MainActivity : AppCompatActivity() {
 //            }
 //
 //        }
-        usb.setOnClickListener {
-            val manager = this.getSystemService(Context.USB_SERVICE) as UsbManager
-            var connection: UsbDeviceConnection? = null
-            Toast.makeText(this@MainActivity, "SEU PAI TEM GONORREIA", Toast.LENGTH_SHORT).show()
-            manager.deviceList.forEach {
-                val usbPermissionName = "com.android.example.USB_PERMISSION";
-                val permissionPendingIntent = PendingIntent.getBroadcast(this, 0, Intent(usbPermissionName), 0)
-                manager.requestPermission(it.value, permissionPendingIntent);
-                registerReceiver(object: BroadcastReceiver() {
-                    override fun onReceive(context: Context?, intent: Intent?) {
-                        if (usbPermissionName.equals(intent!!.action)) {
-                            val device = intent.getParcelableExtra<UsbDevice>(UsbManager.EXTRA_DEVICE)
-                            if(intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
-                                synchronized (this) {
-                                    connection = manager.openDevice(device)
-                                    if(connection != null) {
-                                        val usbSerialDevice =
-                                            UsbSerialDevice.createUsbSerialDevice(
-                                                device,
-                                                connection
-                                            )
-                                        usbSerialDevice.syncOpen()
-                                        usbSerialDevice.setBaudRate(9600)
-                                        usbSerialDevice.setDataBits(UsbSerialInterface.DATA_BITS_8)
-                                        usbSerialDevice.setParity(UsbSerialInterface.PARITY_ODD)
-                                        usbSerialDevice.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF)
-                                        val escpos = EscPos(usbSerialDevice.outputStream)
-                                        Toast.makeText(this@MainActivity, "SEU PAI TEM GONORREIA", Toast.LENGTH_SHORT).show()
-                                        escpos.writeLF(
-                                            "Sds dela mano"
-                                        )
-                                        escpos.feed(1)
-                                            escpos.cut(EscPos.CutMode.PART)
-                                    }else{
-                                        Toast.makeText(this@MainActivity, "Não foi possível conectar", Toast.LENGTH_SHORT).show()
-                                    }
-                                }
+        val manager = this.getSystemService(Context.USB_SERVICE) as UsbManager
+        val usbPermissionName = "com.android.example.USB_PERMISSION";
+        var connection: UsbDeviceConnection? = null
+        registerReceiver(object: BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (usbPermissionName.equals(intent!!.action)) {
+                    val device = intent.getParcelableExtra<UsbDevice>(UsbManager.EXTRA_DEVICE)
+                    if(intent.getBooleanExtra(UsbManager.EXTRA_PERMISSION_GRANTED, false)) {
+                        synchronized (this) {
+                            connection = manager.openDevice(device)
+                            if(connection != null) {
+                                val usbSerialDevice =
+                                    UsbSerialDevice.createUsbSerialDevice(
+                                        device,
+                                        connection
+                                    )
+                                usbSerialDevice.syncOpen()
+                                usbSerialDevice.setBaudRate(9600)
+                                usbSerialDevice.setDataBits(UsbSerialInterface.DATA_BITS_8)
+                                usbSerialDevice.setParity(UsbSerialInterface.PARITY_ODD)
+                                usbSerialDevice.setFlowControl(UsbSerialInterface.FLOW_CONTROL_OFF)
+                                val escpos = EscPos(usbSerialDevice.outputStream)
+                                Toast.makeText(this@MainActivity, "SEU PAI TEM GONORREIA", Toast.LENGTH_SHORT).show()
+                                escpos.writeLF(
+                                    "Sds dela mano"
+                                )
+                                escpos.feed(3)
+                                escpos.cut(EscPos.CutMode.PART)
+                            }else{
+                                Toast.makeText(this@MainActivity, "Não foi possível conectar", Toast.LENGTH_SHORT).show()
                             }
                         }
                     }
-                }, IntentFilter(usbPermissionName))
+                }
+            }
+        }, IntentFilter("com.android.example.USB_PERMISSION"))
+
+        usb.setOnClickListener {
+            Toast.makeText(this@MainActivity, "SEU PAI TEM GONORREIA", Toast.LENGTH_SHORT).show()
+            manager.deviceList.forEach {
+                val permissionPendingIntent = PendingIntent.getBroadcast(this, 0, Intent(usbPermissionName), 0)
+                manager.requestPermission(it.value, permissionPendingIntent);
             }
         }
     }
